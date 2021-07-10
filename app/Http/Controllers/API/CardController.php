@@ -72,6 +72,7 @@ class CardController extends Controller
 
         $rules = [
             'name'   => 'required',
+            'code' => 'required',
             'tel'    => 'required',
             'type'   => 'required',
             // 'services'   => 'required',
@@ -122,6 +123,7 @@ class CardController extends Controller
 
         $rules = [
             'name'   => 'required',
+            'code' => 'required',
             'tel'    => 'required',
             'type'   => 'required',
             'info' => 'required',
