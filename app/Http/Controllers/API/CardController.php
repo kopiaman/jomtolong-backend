@@ -150,25 +150,26 @@ class CardController extends Controller
 
     public function request_update($slug, Request $request)
     {
-        $credentials = $request->except(['']);
-
-        $rules = [
-            'code' => 'required',
-        ];
-
-        $validator = Validator::make($credentials, $rules);
-
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'error' => $validator->messages()], 500);
+        if (!$request->code) {
+            return response()->json(['success' => false, 'error' => 'Code is required'], 500);
         }
 
         $card = Card::where('slug', $slug)->first();
-
 
         //check code is valid
         $check_code = $this->check_code_valid($slug, $request->code, $card->code);
 
         if ($check_code == 'valid') {
+
+            $credentials = $request->except(['code']);
+
+            $rules = [];
+
+            $validator = Validator::make($credentials, $rules);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'error' => $validator->messages()], 500);
+            }
 
             $card->update($credentials);
 
@@ -182,6 +183,8 @@ class CardController extends Controller
 
             return response()->json(['success' => false, 'error' => 'Code not valid'], 500);
         }
+
+        return response()->json(['success' => false, 'error' => 'Technical Error'], 500);
     }
 
     protected function check_code_valid($slug, $requested_code, $hashedPassword)
