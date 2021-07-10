@@ -90,16 +90,29 @@ class CardController extends Controller
         }
 
         // $credentials['image'] = Storage::disk('s3')->put('image', $request->file('image'));
+        $card_existed = $this->check_existing_card($request);
 
-        $card = Card::create($credentials);
+        if ($card_existed) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Hanya 1 rekod dengan status masih memerlukan bantuan dengan dibenarkan'
+            ], 500);
+        } else {
+            $card = Card::create($credentials);
+            return response()->json([
+                'success' => true,
+                'message' => 'Card created',
+            ]);
+        }
+    }
 
-        // tags for card
-        //        $card->syncTags(json_decode($request->tags));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Card created',
-        ]);
+    protected function check_existing_card($request)
+    {
+        $existed =  Card::where('tel', $request->tel)->where('is_enough', 0)->exists();
+        if ($existed) {
+            return true;
+        }
+        return false;
     }
 
 
