@@ -19,7 +19,7 @@ class CreateCardsTable extends Migration
             $table->string('slug')->nullable();
 
             $table->string('tel');
-            $table->boolean('tel_is_whatsapp');
+            $table->boolean('tel_is_whatsapp')->default(1);
 
             $table->string('street');
             $table->string('state');
@@ -33,8 +33,8 @@ class CreateCardsTable extends Migration
             $table->enum('type', ['donatee', 'helper'])->default('donatee');
             $table->json('service')->nullable();
 
-            $table->boolean('is_highlight');
-            $table->boolean('is_enough');
+            $table->boolean('is_highlight')->default(0);
+            $table->boolean('is_enough')->default(0);
 
             $table->enum('status', ['pending', 'approved', 'blocked'])->default('pending');
 
