@@ -8,6 +8,7 @@ use App\Models\Card;
 // use Validator;
 use Illuminate\Support\Facades\Validator;
 use Storage;
+use Hash;
 
 class CardController extends Controller
 {
@@ -49,11 +50,10 @@ class CardController extends Controller
     }
 
 
-
     public function remove($slug)
     {
 
-        $card = Card::where('slug', $slug);
+        $card = Card::where('slug', $slug)->first();
 
         if ($card) {
 
@@ -119,18 +119,8 @@ class CardController extends Controller
 
     public function update($slug, Request $request)
     {
-        $credentials = $request->except(['']);
-
-        $rules = [
-            'name'   => 'required',
-            'code' => 'required',
-            'tel'    => 'required',
-            'type'   => 'required',
-            'info' => 'required',
-            'street' => 'required',
-            'district' => 'required',
-            'state'  => 'required',
-        ];
+        $credentials = $request->except(['code']);
+        $rules = [];
 
         $validator = Validator::make($credentials, $rules);
 
@@ -150,11 +140,57 @@ class CardController extends Controller
             $credentials['image'] = Storage::disk('s3')->put('image', $request->file('image'));
         }
 
-        $card->update($credentials);
+        $updated = $card->update($credentials);
 
         return response()->json([
             'success' => true,
-            'message' => 'Card created',
+            'message' => 'Card Updated'
         ]);
+    }
+
+    public function request_update($slug, Request $request)
+    {
+        $credentials = $request->except(['']);
+
+        $rules = [
+            'code' => 'required',
+        ];
+
+        $validator = Validator::make($credentials, $rules);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'error' => $validator->messages()], 500);
+        }
+
+        $card = Card::where('slug', $slug)->first();
+
+
+        //check code is valid
+        $check_code = $this->check_code_valid($slug, $request->code, $card->code);
+
+        if ($check_code == 'valid') {
+
+            $card->update($credentials);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Card Updated'
+            ]);
+        }
+
+        if ($check_code == 'invalid') {
+
+            return response()->json(['success' => false, 'error' => 'Code not valid'], 500);
+        }
+    }
+
+    protected function check_code_valid($slug, $requested_code, $hashedPassword)
+    {
+
+        if (Hash::check($requested_code, $hashedPassword)) {
+            return "valid";
+        }
+
+        return "invalid";
     }
 }
